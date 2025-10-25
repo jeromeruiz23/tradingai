@@ -37,7 +37,7 @@ export const TradeChart = React.forwardRef<
     if (container.current && !widgetRef.current && (window as any).TradingView) {
       const widget = new (window as any).TradingView.widget({
         autosize: true,
-        symbol: `BINANCE:${selectedPair.replace("/", "")}`,
+        symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
         interval: "15",
         timezone: "Etc/UTC",
         theme: "dark",
@@ -54,7 +54,7 @@ export const TradeChart = React.forwardRef<
 
   React.useEffect(() => {
     if (widgetRef.current && widgetRef.current.chart) {
-      widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}`, () => {});
+      widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
     }
   }, [selectedPair]);
 
@@ -82,9 +82,9 @@ export const TradeChart = React.forwardRef<
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Market: {selectedPair}</CardTitle>
+            <CardTitle>Market: {selectedPair} (Perpetual)</CardTitle>
             <CardDescription>
-              Visualizing real-time market trends
+              Visualizing real-time market trends for perpetual futures.
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">

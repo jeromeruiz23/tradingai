@@ -91,7 +91,7 @@ export function AIPredictionPanel({
           <div className="mt-6 space-y-4 animate-in fade-in-50">
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertTitle>AI Recommendation for {state.prediction.tradingPair?.replace('USDT', '/USDT')}</AlertTitle>
+              <AlertTitle>AI Recommendation for {state.prediction.tradingPair?.replace('USDT', '/USDT')} (Perp)</AlertTitle>
               <AlertDescription>{state.prediction.reasoning}</AlertDescription>
             </Alert>
             

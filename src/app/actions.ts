@@ -20,7 +20,7 @@ export async function getAIPrediction(
       binanceData: mockBinanceData(tradingPair),
       tradingViewChart: chartImage,
       accountBalance: 100,
-      tradingPair: tradingPair
+      tradingPair: `${tradingPair}PERP`
     });
     
     if (!prediction || !prediction.entryPoint) {
