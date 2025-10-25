@@ -61,7 +61,7 @@ const prompt = ai.definePrompt({
   output: {schema: PredictEntryPointsOutputSchema},
   prompt: `You are an AI trading assistant that analyzes Binance Futures data for perpetual contracts to provide optimal trade entry points.
 
-  Given the following information for {{tradingPair}}, predict the nearest or instant entry point for a trade, explain your reasoning, and suggest a lot size, stop loss, and take profit. The user has an account balance of $100, and you should risk around 20-30% of the account balance.
+  Given the following information for {{tradingPair}}, predict an entry point for a trade based on the current price. Explain your reasoning and suggest a lot size, stop loss, and take profit. The user has an account balance of $100, and you should risk around 20-30% of the account balance.
 
   Binance Data: {{{binanceData}}}
   Account Balance: $100
@@ -70,7 +70,7 @@ const prompt = ai.definePrompt({
   Ensure the lot size, stop loss, and take profit are calculated based on risking 20%-30% of the $100 account balance.
 
   Here's how you should structure your response:
-  - entryPoint: The predicted entry point for the trade.
+  - entryPoint: The predicted entry point for the trade, which should be very close to the current price from the data.
   - reasoning: Explain the rationale behind the predicted entry point. Consider factors like support and resistance levels, chart patterns, and potential breakout points based on the provided data.
   - lotSize: The suggested lot size for the trade, calculated to risk around 20%-30% of the account balance.
   - stopLoss: The suggested stop loss for the trade, placed to limit potential losses.
