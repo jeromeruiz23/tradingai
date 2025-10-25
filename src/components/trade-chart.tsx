@@ -46,49 +46,43 @@ export const TradeChart = React.memo(
     const [scriptsReady, setScriptsReady] = React.useState(false);
 
     React.useEffect(() => {
-      // Function to check if scripts are loaded
-      const checkScripts = () => {
-        if ((window as any).TradingView && (window as any).Datafeeds) {
-          setScriptsReady(true);
+      // Function to add a script to the document head
+      const addScript = (src: string, id: string, onLoad: () => void) => {
+        if (document.getElementById(id)) {
+          // If script already exists, assume it's loaded or loading
+          const script = document.getElementById(id) as HTMLScriptElement;
+          if ((window as any).TradingView && (window as any).Datafeeds) {
+              onLoad();
+          } else {
+            script.addEventListener('load', onLoad);
+          }
+          return;
         }
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = src;
+        script.async = true;
+        script.onload = onLoad;
+        document.head.appendChild(script);
       };
 
-      if (!(window as any).TradingView || !(window as any).Datafeeds) {
-        const tvScript = document.createElement('script');
-        if (!document.querySelector('script[src="https://s3.tradingview.com/tv.js"]')) {
-            tvScript.id = 'tradingview-script';
-            tvScript.src = 'https://s3.tradingview.com/tv.js';
-            tvScript.async = true;
-            document.head.appendChild(tvScript);
-        }
+      addScript('https://s3.tradingview.com/tv.js', 'tradingview-script', () => {
+        addScript('https://s3.tradingview.com/datafeeds/udf/dist/bundle.js', 'tradingview-datafeed-script', () => {
+          setScriptsReady(true);
+        });
+      });
 
-        const datafeedScript = document.createElement('script');
-        if (!document.querySelector('script[src="https://s3.tradingview.com/datafeeds/udf/dist/bundle.js"]')) {
-            datafeedScript.id = 'tradingview-datafeed-script';
-            datafeedScript.src = 'https://s3.tradingview.com/datafeeds/udf/dist/bundle.js';
-            datafeedScript.async = true;
-            document.head.appendChild(datafeedScript);
-        }
-        
-        // Poll for scripts to be ready
-        const interval = setInterval(() => {
-            if ((window as any).TradingView && (window as any).Datafeeds) {
-                clearInterval(interval);
-                setScriptsReady(true);
-            }
-        }, 100);
-
-        return () => clearInterval(interval);
-
-      } else {
-        checkScripts();
-      }
     }, []);
 
     React.useEffect(() => {
-      if (!scriptsReady || !container.current || widgetRef.current) return;
+      if (!scriptsReady || !container.current) return;
       
       const createWidget = () => {
+         if (!(window as any).TradingView || !(window as any).Datafeeds) {
+             console.error("TradingView scripts are not ready yet.");
+             return;
+         }
+
         const widget = new (window as any).TradingView.widget({
           autosize: true,
           symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
@@ -120,6 +114,11 @@ export const TradeChart = React.memo(
         });
       };
       
+      if (widgetRef.current) {
+          widgetRef.current.remove();
+          widgetRef.current = null;
+      }
+      
       createWidget();
 
       return () => {
@@ -129,19 +128,7 @@ export const TradeChart = React.memo(
           setChartReady(false);
         }
       };
-    }, [scriptsReady]);
-    
-    React.useEffect(() => {
-      if (isChartReady && widgetRef.current) {
-         widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
-      }
-    }, [selectedPair, isChartReady]);
-
-     React.useEffect(() => {
-      if (isChartReady && widgetRef.current) {
-        widgetRef.current.chart().setResolution(selectedTimeframe, () => {});
-      }
-    }, [selectedTimeframe, isChartReady]);
+    }, [scriptsReady, selectedPair, selectedTimeframe]);
 
     const handlePairChange = (pair: string) => {
       onPairChange(pair.replace('USDT', '/USDT'));
