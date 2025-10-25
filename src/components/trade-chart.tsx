@@ -43,74 +43,93 @@ export const TradeChart = React.memo(
     const widgetRef = React.useRef<any>(null);
     const [selectedTimeframe, setSelectedTimeframe] = React.useState("15");
     const [isChartReady, setChartReady] = React.useState(false);
+    const [scriptsReady, setScriptsReady] = React.useState(false);
 
     React.useEffect(() => {
-      const createWidget = () => {
-        if (
-          container.current &&
-          (window as any).TradingView &&
-          (window as any).Datafeeds &&
-          !widgetRef.current
-        ) {
-          const widget = new (window as any).TradingView.widget({
-            autosize: true,
-            symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
-            interval: selectedTimeframe,
-            timezone: "Etc/UTC",
-            theme: "dark",
-            style: "1",
-            locale: "en",
-            enable_publishing: false,
-            hide_side_toolbar: false,
-            allow_symbol_change: true,
-            container_id: "tradingview-chart-container",
-            disabled_features: ["use_localstorage_for_settings", "widget_logo_sent_to_server", "symbol_search_hot_key", "telemetry"],
-            studies: [
-              "RSI@tv-basicstudies",
-              "MACD@tv-basicstudies",
-            ],
-            datafeed: new (window as any).Datafeeds.UDFCompatibleDatafeed(
-              "https://demo_feed.tradingview.com", 
-              {
-                supported_resolutions: ["1", "5", "15", "30", "60", "240", "D", "W", "M"]
-              }
-            ),
-          });
-
-          widget.onChartReady(() => {
-            widgetRef.current = widget;
-            setChartReady(true);
-          });
+      // Function to check if scripts are loaded
+      const checkScripts = () => {
+        if ((window as any).TradingView && (window as any).Datafeeds) {
+          setScriptsReady(true);
         }
-      }
+      };
 
-      if (!(window as any).TradingView) {
+      if (!(window as any).TradingView || !(window as any).Datafeeds) {
         const tvScript = document.createElement('script');
-        tvScript.src = 'https://s3.tradingview.com/tv.js';
-        tvScript.async = true;
-        document.body.appendChild(tvScript);
+        if (!document.querySelector('script[src="https://s3.tradingview.com/tv.js"]')) {
+            tvScript.id = 'tradingview-script';
+            tvScript.src = 'https://s3.tradingview.com/tv.js';
+            tvScript.async = true;
+            document.head.appendChild(tvScript);
+        }
 
-        tvScript.onload = () => {
-            const datafeedScript = document.createElement('script');
+        const datafeedScript = document.createElement('script');
+        if (!document.querySelector('script[src="https://s3.tradingview.com/datafeeds/udf/dist/bundle.js"]')) {
+            datafeedScript.id = 'tradingview-datafeed-script';
             datafeedScript.src = 'https://s3.tradingview.com/datafeeds/udf/dist/bundle.js';
             datafeedScript.async = true;
-            document.body.appendChild(datafeedScript);
-            
-            datafeedScript.onload = createWidget;
-        };
+            document.head.appendChild(datafeedScript);
+        }
+        
+        // Poll for scripts to be ready
+        const interval = setInterval(() => {
+            if ((window as any).TradingView && (window as any).Datafeeds) {
+                clearInterval(interval);
+                setScriptsReady(true);
+            }
+        }, 100);
 
-        return () => {
-          if (widgetRef.current) {
-            widgetRef.current.remove();
-            widgetRef.current = null;
-          }
-          // Note: Intentionally not removing scripts to avoid re-adding them on fast navigations
-        };
+        return () => clearInterval(interval);
+
       } else {
-        createWidget();
+        checkScripts();
       }
-      
     }, []);
+
+    React.useEffect(() => {
+      if (!scriptsReady || !container.current || widgetRef.current) return;
+      
+      const createWidget = () => {
+        const widget = new (window as any).TradingView.widget({
+          autosize: true,
+          symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
+          interval: selectedTimeframe,
+          timezone: "Etc/UTC",
+          theme: "dark",
+          style: "1",
+          locale: "en",
+          enable_publishing: false,
+          hide_side_toolbar: false,
+          allow_symbol_change: true,
+          container_id: "tradingview-chart-container",
+          disabled_features: ["use_localstorage_for_settings", "widget_logo_sent_to_server", "symbol_search_hot_key", "telemetry"],
+          studies: [
+            "RSI@tv-basicstudies",
+            "MACD@tv-basicstudies",
+          ],
+          datafeed: new (window as any).Datafeeds.UDFCompatibleDatafeed(
+            "https://demo_feed.tradingview.com", 
+            {
+              supported_resolutions: ["1", "5", "15", "30", "60", "240", "D", "W", "M"]
+            }
+          ),
+        });
+
+        widget.onChartReady(() => {
+          widgetRef.current = widget;
+          setChartReady(true);
+        });
+      };
+      
+      createWidget();
+
+      return () => {
+        if (widgetRef.current) {
+          widgetRef.current.remove();
+          widgetRef.current = null;
+          setChartReady(false);
+        }
+      };
+    }, [scriptsReady]);
     
     React.useEffect(() => {
       if (isChartReady && widgetRef.current) {
