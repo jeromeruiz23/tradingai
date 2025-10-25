@@ -14,7 +14,7 @@ import {z} from 'genkit';
 const PredictEntryPointsInputSchema = z.object({
   binanceData: z
     .string()
-    .describe('Real-time data from Binance Futures, including price, volume, and technical indicators.'),
+    .describe('Real-time data from Binance Futures, including price, volume, and recent k-line (candlestick) data.'),
   accountBalance: z
     .number()
     .describe('The user account balance in USD.'),
