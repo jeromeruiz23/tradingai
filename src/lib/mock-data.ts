@@ -1,33 +1,8 @@
 import type { Trade } from "./types";
 
-// Generate more realistic-looking chart data
-const generateChartData = () => {
-  const data = [];
-  let price = 45000;
-  const startTime = new Date();
-  startTime.setHours(startTime.getHours() - 50);
-
-  for (let i = 0; i < 50; i++) {
-    const newPrice =
-      price +
-      Math.sin(i / 5) * 500 + // A sine wave for the general trend
-      (Math.random() - 0.5) * 300; // Some noise
-
-    const time = new Date(startTime.getTime() + i * 12 * 60 * 1000); // 12-minute intervals
-
-    data.push({
-      time: time.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      price: parseFloat(newPrice.toFixed(2)),
-    });
-    price = newPrice;
-  }
-  return data;
-};
-
-export const chartData = generateChartData();
+// This file is no longer used for chart data, but we'll keep the structure
+// in case we need to revert or for other parts of the app.
+export const chartData = [];
 
 
 export const initialTrades: Trade[] = [

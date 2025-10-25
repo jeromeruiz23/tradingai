@@ -1,21 +1,13 @@
 "use client";
 
+import * as React from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
-import { chartData } from "@/lib/mock-data";
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import {
   Select,
   SelectContent,
@@ -23,17 +15,47 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
-const chartConfig = {
-  price: {
-    label: "Price",
-    color: "hsl(var(--accent))",
-  },
-} satisfies ChartConfig;
+const availablePairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"];
 
-const availablePairs = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "DOGE/USDT"];
+export function TradeChart({
+  selectedPair,
+  onPairChange,
+}: {
+  selectedPair: string;
+  onPairChange: (pair: string) => void;
+}) {
+  const container = React.useRef<HTMLDivElement>(null);
 
-export function TradeChart({ selectedPair, onPairChange }: { selectedPair: string; onPairChange: (pair: string) => void; }) {
+  React.useEffect(() => {
+    if (container.current && (window as any).TradingView) {
+      const widget = new (window as any).TradingView.widget({
+        autosize: true,
+        symbol: `BINANCE:${selectedPair.replace("/", "")}`,
+        interval: "15",
+        timezone: "Etc/UTC",
+        theme: "dark",
+        style: "1",
+        locale: "en",
+        enable_publishing: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: true,
+        container_id: "tradingview-chart-container",
+      });
+    }
+    
+    return () => {
+        if (container.current) {
+            container.current.innerHTML = "";
+        }
+    }
+  }, [selectedPair]);
+
+  const handlePairChange = (pair: string) => {
+    onPairChange(pair.replace('USDT', '/USDT'));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -45,64 +67,39 @@ export function TradeChart({ selectedPair, onPairChange }: { selectedPair: strin
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Select value={selectedPair} onValueChange={onPairChange}>
+            <Select value={selectedPair.replace('/', '')} onValueChange={handlePairChange}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Select Pair" />
               </SelectTrigger>
               <SelectContent>
                 {availablePairs.map((pair) => (
                   <SelectItem key={pair} value={pair}>
-                    {pair}
+                    {pair.replace('USDT', '/USDT')}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm">15m</Button>
-            <Button variant="secondary" size="sm">1H</Button>
-            <Button variant="outline" size="sm">4H</Button>
-            <Button variant="outline" size="sm">1D</Button>
+            <Button variant="outline" size="sm">
+              15m
+            </Button>
+            <Button variant="secondary" size="sm">
+              1H
+            </Button>
+            <Button variant="outline" size="sm">
+              4H
+            </Button>
+            <Button variant="outline" size="sm">
+              1D
+            </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[250px] w-full">
-          <LineChart
-            accessibilityLayer
-            data={chartData}
-            margin={{
-              top: 5,
-              right: 10,
-              left: 10,
-              bottom: 0,
-            }}
-          >
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
-            <XAxis
-              dataKey="time"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              tickFormatter={(value) => value.slice(0, 5)}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-              domain={["dataMin - 100", "dataMax + 100"]}
-            />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" />}
-            />
-            <Line
-              dataKey="price"
-              type="natural"
-              stroke="var(--color-price)"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ChartContainer>
+      <CardContent className="h-[400px] w-full p-0">
+        <div
+          id="tradingview-chart-container"
+          ref={container}
+          className="h-full w-full"
+        />
       </CardContent>
     </Card>
   );
