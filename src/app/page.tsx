@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Header } from "@/components/header";
 import { TradeChart } from "@/components/trade-chart";
 import { AIPredictionPanel } from "@/components/ai-prediction-panel";
 import { TradeHistory } from "@/components/trade-history";
 import type { Trade, Prediction } from "@/lib/types";
-import { initialTrades } from "@/lib/mock-data";
+import { addTrade, closeTrade, RootState } from "@/lib/redux/store";
 
 export default function Home() {
-  const [trades, setTrades] = React.useState<Trade[]>(initialTrades);
+  const dispatch = useDispatch();
+  const trades = useSelector((state: RootState) => state.trades.trades);
   const [selectedPair, setSelectedPair] = React.useState("BTC/USDT");
 
   const handleExecuteTrade = (
@@ -28,29 +30,21 @@ export default function Home() {
       pnl: 0,
       reasoning: prediction.reasoning,
     };
-    setTrades((prevTrades) => [newTrade, ...prevTrades]);
+    dispatch(addTrade(newTrade));
   };
 
   const handleCloseTrade = (tradeId: string) => {
-    setTrades((prevTrades) =>
-      prevTrades.map((trade) => {
-        if (trade.id === tradeId) {
-          // Simulate a random profit or loss outcome
-          const outcome = Math.random() > 0.5 ? "profit" : "loss";
-          const pnl =
-            outcome === "profit"
-              ? (trade.takeProfit - trade.entryPrice) * trade.lotSize
-              : (trade.stopLoss - trade.entryPrice) * trade.lotSize;
+    // Simulate a random profit or loss outcome
+    const tradeToClose = trades.find(t => t.id === tradeId);
+    if (!tradeToClose) return;
 
-          return {
-            ...trade,
-            status: "Closed",
-            pnl: parseFloat(pnl.toFixed(2)),
-          };
-        }
-        return trade;
-      })
-    );
+    const outcome = Math.random() > 0.5 ? "profit" : "loss";
+    const pnl =
+      outcome === "profit"
+        ? (tradeToClose.takeProfit - tradeToClose.entryPrice) * tradeToClose.lotSize
+        : (tradeToClose.stopLoss - tradeToClose.entryPrice) * tradeToClose.lotSize;
+    
+    dispatch(closeTrade({ tradeId, pnl: parseFloat(pnl.toFixed(2)) }));
   };
   
   return (
