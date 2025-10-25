@@ -18,7 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const availablePairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"];
+const availablePairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT", "LINKUSDT", "MATICUSDT"];
 const timeframes = [
   { value: "15", label: "15m" },
   { value: "60", label: "1H" },
