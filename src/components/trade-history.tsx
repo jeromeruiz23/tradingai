@@ -63,7 +63,7 @@ export function TradeHistory({ trades, onCloseTrade }: TradeHistoryProps) {
                       {trade.type}
                     </span>
                   </TableCell>
-                  <TableCell>${trade.entryPrice.toLocaleString()}</TableCell>
+                  <TableCell>${trade.entryPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</TableCell>
                   <TableCell>
                     <Badge
                       variant={

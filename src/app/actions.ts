@@ -5,8 +5,8 @@ import { Prediction } from "@/lib/types";
 
 async function getBinanceData(tradingPair: string): Promise<string> {
   try {
-    const klinesUrl = `https://api.binance.com/api/v3/klines?symbol=${tradingPair}&interval=1m&limit=50`;
-    const tickerUrl = `https://api.binance.com/api/v3/ticker/24hr?symbol=${tradingPair}`;
+    const klinesUrl = `https://fapi.binance.com/fapi/v1/klines?symbol=${tradingPair}&interval=1m&limit=50`;
+    const tickerUrl = `https://fapi.binance.com/fapi/v1/ticker/24hr?symbol=${tradingPair}`;
 
     const [klinesResponse, tickerResponse] = await Promise.all([
       fetch(klinesUrl),
@@ -14,14 +14,14 @@ async function getBinanceData(tradingPair: string): Promise<string> {
     ]);
 
     if (!klinesResponse.ok || !tickerResponse.ok) {
-      throw new Error(`Failed to fetch data from Binance. Status: ${klinesResponse.status}, ${tickerResponse.status}`);
+      throw new Error(`Failed to fetch data from Binance Futures. Status: ${klinesResponse.status}, ${tickerResponse.status}`);
     }
 
     const klinesData = await klinesResponse.json();
     const tickerData = await tickerResponse.json();
 
     const latestKline = klinesData[klinesData.length - 1];
-    const price = parseFloat(latestKline[4]).toFixed(2);
+    const price = parseFloat(latestKline[4]).toFixed(6);
 
     const binanceData = {
       ticker: tradingPair,
@@ -54,20 +54,29 @@ export async function getAIPrediction(
 ): Promise<{ prediction: Prediction | null; error: string | null }> {
   try {
     const tradingPair = formData.get("tradingPair") as string || "BTCUSDT";
+    const tradingPairPerp = `${tradingPair}PERP`;
     
     const binanceData = await getBinanceData(tradingPair);
 
     const prediction = await predictEntryPoints({
       binanceData: binanceData,
       accountBalance: 100,
-      tradingPair: `${tradingPair}PERP`
+      tradingPair: tradingPairPerp
     });
     
     if (!prediction || !prediction.entryPoint) {
        return { prediction: null, error: "AI failed to generate a valid prediction. Please try again." };
     }
 
-    return { prediction: { ...prediction, tradingPair: tradingPair.replace('PERP', '') }, error: null };
+    const formattedPrediction: Prediction = {
+        ...prediction,
+        entryPoint: parseFloat(prediction.entryPoint.toFixed(6)),
+        stopLoss: parseFloat(prediction.stopLoss.toFixed(6)),
+        takeProfit: parseFloat(prediction.takeProfit.toFixed(6)),
+        tradingPair: tradingPair.replace('PERP', '')
+    }
+
+    return { prediction: formattedPrediction, error: null };
   } catch (error: any) {
     console.error(error);
     return { prediction: null, error: error.message || "An unexpected error occurred. Please check the server logs." };

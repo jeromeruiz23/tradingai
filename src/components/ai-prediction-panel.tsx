@@ -75,7 +75,7 @@ export function AIPredictionPanel({
             <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="space-y-1">
                     <p className="text-muted-foreground">Entry Point</p>
-                    <p className="font-semibold">${state.prediction.entryPoint.toLocaleString()}</p>
+                    <p className="font-semibold">${state.prediction.entryPoint.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</p>
                 </div>
                 <div className="space-y-1">
                     <p className="text-muted-foreground">Lot Size</p>
@@ -86,11 +86,11 @@ export function AIPredictionPanel({
             <div className="grid grid-cols-2 gap-4 text-sm">
                  <div className="space-y-1">
                     <p className="text-muted-foreground">Stop Loss</p>
-                    <p className="font-semibold text-destructive">${state.prediction.stopLoss.toLocaleString()}</p>
+                    <p className="font-semibold text-destructive">${state.prediction.stopLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</p>
                 </div>
                 <div className="space-y-1">
                     <p className="text-muted-foreground">Take Profit</p>
-                    <p className="font-semibold text-accent">${state.prediction.takeProfit.toLocaleString()}</p>
+                    <p className="font-semibold text-accent">${state.prediction.takeProfit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</p>
                 </div>
             </div>
 
