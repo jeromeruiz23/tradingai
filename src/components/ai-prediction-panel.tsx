@@ -1,8 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
 import { getAIPrediction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,29 +16,6 @@ import { Loader2, Info, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import type { Prediction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
-const initialState: { prediction: Prediction | null; error: string | null } = {
-  prediction: null,
-  error: null,
-};
-
-function SubmitButton({ isAnalyzing }: { isAnalyzing: boolean }) {
-  const { pending } = useFormStatus();
-  const isDisabled = pending || isAnalyzing;
-  
-  return (
-    <Button type="submit" className="w-full" disabled={isDisabled}>
-      {isDisabled ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Analyzing...
-        </>
-      ) : (
-        "Analyze & Predict Entry"
-      )}
-    </Button>
-  );
-}
-
 export function AIPredictionPanel({ 
   onExecuteTrade, 
   selectedPair,
@@ -50,41 +25,52 @@ export function AIPredictionPanel({
   selectedPair: string,
   onAnalysis: () => Promise<string | null | undefined>,
 }) {
-  const [state, formAction] = useActionState(getAIPrediction, initialState);
-  const { toast } = useToast();
-  const formRef = React.useRef<HTMLFormElement>(null);
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [state, setState] = React.useState<{ prediction: Prediction | null; error: string | null }>({ prediction: null, error: null });
+  const { toast } = useToast();
 
-  const handleFormAction = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsAnalyzing(true);
+    setState({ prediction: null, error: null }); // Clear previous state
+
     try {
       const imageData = await onAnalysis();
-      if (imageData && formRef.current) {
-        const formData = new FormData(formRef.current);
-        formData.set('chartImage', imageData);
-        formAction(formData);
-      } else if (!imageData) {
+      if (!imageData) {
         toast({
           variant: "destructive",
           title: "Analysis Failed",
           description: "Could not capture a screenshot of the chart.",
         });
+        return;
       }
-    } finally {
+      
+      const formData = new FormData();
+      formData.append('tradingPair', selectedPair.replace('/', ''));
+      formData.append('chartImage', imageData);
+
+      const result = await getAIPrediction({ prediction: null, error: null }, formData);
+      setState(result);
+
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Analysis Failed",
+          description: result.error,
+        });
+      }
+
+    } catch (e) {
+       toast({
+          variant: "destructive",
+          title: "Analysis Failed",
+          description: "An unexpected error occurred.",
+        });
+    }
+    finally {
       setIsAnalyzing(false);
     }
   }
-
-  React.useEffect(() => {
-    if (state.error) {
-      toast({
-        variant: "destructive",
-        title: "Analysis Failed",
-        description: state.error,
-      });
-    }
-  }, [state.error, toast]);
   
   return (
     <Card className="flex flex-col">
@@ -93,10 +79,17 @@ export function AIPredictionPanel({
         <CardDescription>Account Balance: $100.00</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <form onSubmit={handleFormAction} ref={formRef} className="space-y-4">
-          <input type="hidden" name="tradingPair" value={selectedPair.replace('/', '')} />
-          {/* The chartImage is now passed programmatically */}
-          <SubmitButton isAnalyzing={isAnalyzing} />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Button type="submit" className="w-full" disabled={isAnalyzing}>
+            {isAnalyzing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              "Analyze & Predict Entry"
+            )}
+          </Button>
         </form>
 
         {state.prediction && (
