@@ -10,6 +10,7 @@ import { initialTrades } from "@/lib/mock-data";
 
 export default function Home() {
   const [trades, setTrades] = React.useState<Trade[]>(initialTrades);
+  const [selectedPair, setSelectedPair] = React.useState("BTC/USDT");
 
   const handleExecuteTrade = (
     prediction: Prediction,
@@ -17,7 +18,7 @@ export default function Home() {
   ) => {
     const newTrade: Trade = {
       id: crypto.randomUUID(),
-      pair: "BTC/USDT",
+      pair: selectedPair,
       type,
       entryPrice: prediction.entryPoint,
       stopLoss: prediction.stopLoss,
@@ -58,10 +59,10 @@ export default function Home() {
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2 grid gap-4">
-            <TradeChart />
+            <TradeChart selectedPair={selectedPair} onPairChange={setSelectedPair} />
             <TradeHistory trades={trades} onCloseTrade={handleCloseTrade} />
           </div>
-          <AIPredictionPanel onExecuteTrade={handleExecuteTrade} />
+          <AIPredictionPanel onExecuteTrade={handleExecuteTrade} selectedPair={selectedPair} />
         </div>
       </main>
     </div>

@@ -21,6 +21,9 @@ const PredictEntryPointsInputSchema = z.object({
   accountBalance: z
     .number()
     .describe('The user account balance in USD.'),
+  tradingPair: z
+    .string()
+    .describe('The trading pair (e.g., BTCUSDT).'),
 });
 
 export type PredictEntryPointsInput = z.infer<typeof PredictEntryPointsInputSchema>;
@@ -41,6 +44,10 @@ const PredictEntryPointsOutputSchema = z.object({
   takeProfit: z
     .number()
     .describe('The suggested take profit for the trade.'),
+  tradingPair: z
+    .string()
+    .optional()
+    .describe('The trading pair for the prediction.'),
 });
 
 export type PredictEntryPointsOutput = z.infer<typeof PredictEntryPointsOutputSchema>;
@@ -57,11 +64,12 @@ const prompt = ai.definePrompt({
   output: {schema: PredictEntryPointsOutputSchema},
   prompt: `You are an AI trading assistant that analyzes Binance Futures data and TradingView charts to provide optimal trade entry points.
 
-  Given the following information, predict the nearest or instant entry point for a trade, explain your reasoning, and suggest a lot size, stop loss, and take profit. The user has an account balance of $100, and you should risk around 20-30% of the account balance.
+  Given the following information for {{tradingPair}}, predict the nearest or instant entry point for a trade, explain your reasoning, and suggest a lot size, stop loss, and take profit. The user has an account balance of $100, and you should risk around 20-30% of the account balance.
 
   Binance Data: {{{binanceData}}}
   TradingView Chart: {{media url=tradingViewChart}}
   Account Balance: $100
+  Trading Pair: {{tradingPair}}
 
   Ensure the lot size, stop loss, and take profit are calculated based on risking 20%-30% of the $100 account balance.
 
@@ -71,6 +79,7 @@ const prompt = ai.definePrompt({
   - lotSize: The suggested lot size for the trade, calculated to risk around 20%-30% of the account balance.
   - stopLoss: The suggested stop loss for the trade, placed to limit potential losses.
   - takeProfit: The suggested take profit for the trade, placed to capture potential gains.
+  - tradingPair: The trading pair for this prediction (e.g., BTCUSDT).
   `,
 });
 

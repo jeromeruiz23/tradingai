@@ -39,9 +39,10 @@ function SubmitButton() {
   );
 }
 
-export function AIPredictionPanel({ onExecuteTrade }: { onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void }) {
+export function AIPredictionPanel({ onExecuteTrade, selectedPair }: { onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void, selectedPair: string }) {
   const [state, formAction] = useFormState(getAIPrediction, initialState);
   const { toast } = useToast();
+  const formRef = React.useRef<HTMLFormElement>(null);
 
   React.useEffect(() => {
     if (state.error) {
@@ -60,7 +61,8 @@ export function AIPredictionPanel({ onExecuteTrade }: { onExecuteTrade: (predict
         <CardDescription>Account Balance: $100.00</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <form action={formAction} className="space-y-4">
+        <form action={formAction} ref={formRef} className="space-y-4">
+          <input type="hidden" name="tradingPair" value={selectedPair.replace('/', '')} />
           <SubmitButton />
         </form>
 
@@ -68,7 +70,7 @@ export function AIPredictionPanel({ onExecuteTrade }: { onExecuteTrade: (predict
           <div className="mt-6 space-y-4 animate-in fade-in-50">
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertTitle>AI Recommendation</AlertTitle>
+              <AlertTitle>AI Recommendation for {state.prediction.tradingPair?.replace('USDT', '/USDT')}</AlertTitle>
               <AlertDescription>{state.prediction.reasoning}</AlertDescription>
             </Alert>
             

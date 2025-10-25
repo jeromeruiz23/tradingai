@@ -57,8 +57,8 @@ export const initialTrades: Trade[] = [
   },
 ];
 
-export const mockBinanceData = JSON.stringify({
-    "ticker": "BTCUSDT",
+export const mockBinanceData = (ticker: string) => JSON.stringify({
+    "ticker": ticker,
     "price": "45050.50",
     "volume": "10000.5",
     "high_24h": "46000.00",
