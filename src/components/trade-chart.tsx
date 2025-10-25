@@ -18,7 +18,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const availablePairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "BNBUSDT", "XRPUSDT", "ADAUSDT", "LINKUSDT", "MATICUSDT"];
+const availablePairs = [
+  "BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "BNBUSDT", "XRPUSDT", 
+  "ADAUSDT", "LINKUSDT", "MATICUSDT", "AVAXUSDT", "DOTUSDT", "SHIBUSDT", 
+  "TRXUSDT", "LTCUSDT", "BCHUSDT", "UNIUSDT", "AAVEUSDT", "FTMUSDT", 
+  "ATOMUSDT", "NEARUSDT", "ALGOUSDT", "XLMUSDT", "VETUSDT", "FILUSDT"
+];
 const timeframes = [
   { value: "15", label: "15m" },
   { value: "60", label: "1H" },
@@ -71,7 +76,10 @@ export const TradeChart = React.memo(
           widgetRef.current.remove();
           widgetRef.current = null;
         }
-        document.body.removeChild(script);
+        // Check if the script is still in the body before removing
+        if (script.parentNode) {
+            document.body.removeChild(script);
+        }
       };
     }, [createWidget]);
     
