@@ -62,7 +62,7 @@ export default function Home() {
             <TradeChart selectedPair={selectedPair} onPairChange={setSelectedPair} />
             <TradeHistory trades={trades} onCloseTrade={handleCloseTrade} />
           </div>
-          <AIPredictionPanel onExecuteTrade={handleExecuteTrade} selectedPair={selectedPair} />
+          <AIPredictionPanel key={selectedPair} onExecuteTrade={handleExecuteTrade} selectedPair={selectedPair} />
         </div>
       </main>
     </div>
