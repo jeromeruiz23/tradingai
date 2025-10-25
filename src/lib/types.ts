@@ -1,6 +1,6 @@
 import type { PredictEntryPointsOutput } from "@/ai/flows/predict-entry-points";
 
-export type Prediction = PredictEntryPointsOutput;
+export type Prediction = PredictEntryPointsOutput & { tradingPair: string };
 
 export type Trade = {
   id: string;

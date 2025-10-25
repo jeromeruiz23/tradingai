@@ -27,7 +27,7 @@ export async function getAIPrediction(
        return { prediction: null, error: "AI failed to generate a valid prediction. Please try again." };
     }
 
-    return { prediction: { ...prediction, tradingPair }, error: null };
+    return { prediction: { ...prediction, tradingPair: tradingPair.replace('PERP', '') }, error: null };
   } catch (error) {
     console.error(error);
     return { prediction: null, error: "An unexpected error occurred. Please check the server logs." };
