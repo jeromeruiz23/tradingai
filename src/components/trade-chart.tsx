@@ -57,6 +57,11 @@ export const TradeChart = React.memo(
           hide_side_toolbar: false,
           allow_symbol_change: true,
           container_id: "tradingview-chart-container",
+          disabled_features: ["use_localstorage_for_settings", "widget_logo_sent_to_server", "symbol_search_hot_key"],
+          studies: [
+            "RSI@tv-basicstudies",
+            "MACD@tv-basicstudies",
+          ],
         });
         widgetRef.current = widget;
       }
