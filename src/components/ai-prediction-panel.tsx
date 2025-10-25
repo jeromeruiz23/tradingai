@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { getAIPrediction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
 import { Loader2, Info, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
-import type { Prediction, Trade } from "@/lib/types";
+import type { Prediction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
 const initialState: { prediction: Prediction | null; error: string | null } = {
@@ -40,7 +40,7 @@ function SubmitButton() {
 }
 
 export function AIPredictionPanel({ onExecuteTrade, selectedPair }: { onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void, selectedPair: string }) {
-  const [state, formAction] = useFormState(getAIPrediction, initialState);
+  const [state, formAction] = useActionState(getAIPrediction, initialState);
   const { toast } = useToast();
   const formRef = React.useRef<HTMLFormElement>(null);
 
