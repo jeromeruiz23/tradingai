@@ -42,67 +42,75 @@ export const TradeChart = React.memo(
     const container = React.useRef<HTMLDivElement>(null);
     const widgetRef = React.useRef<any>(null);
     const [selectedTimeframe, setSelectedTimeframe] = React.useState("15");
-
-    const createWidget = React.useCallback(() => {
-      if (container.current && (window as any).TradingView && !widgetRef.current) {
-        const widget = new (window as any).TradingView.widget({
-          autosize: true,
-          symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
-          interval: selectedTimeframe,
-          timezone: "Etc/UTC",
-          theme: "dark",
-          style: "1",
-          locale: "en",
-          enable_publishing: false,
-          hide_side_toolbar: false,
-          allow_symbol_change: true,
-          container_id: "tradingview-chart-container",
-          disabled_features: ["use_localstorage_for_settings", "widget_logo_sent_to_server", "symbol_search_hot_key"],
-          studies: [
-            "RSI@tv-basicstudies",
-            "MACD@tv-basicstudies",
-          ],
-        });
-        widgetRef.current = widget;
-      }
-    }, [selectedPair, selectedTimeframe]);
+    const [isChartReady, setChartReady] = React.useState(false);
 
     React.useEffect(() => {
-      const script = document.createElement('script');
-      script.src = 'https://s3.tradingview.com/tv.js';
-      script.async = true;
-      script.onload = () => {
-        createWidget();
-      };
-      document.body.appendChild(script);
+      const createWidget = () => {
+        if (container.current && (window as any).TradingView && !widgetRef.current) {
+          const widget = new (window as any).TradingView.widget({
+            autosize: true,
+            symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
+            interval: selectedTimeframe,
+            timezone: "Etc/UTC",
+            theme: "dark",
+            style: "1",
+            locale: "en",
+            enable_publishing: false,
+            hide_side_toolbar: false,
+            allow_symbol_change: true,
+            container_id: "tradingview-chart-container",
+            disabled_features: ["use_localstorage_for_settings", "widget_logo_sent_to_server", "symbol_search_hot_key", "telemetry"],
+            studies: [
+              "RSI@tv-basicstudies",
+              "MACD@tv-basicstudies",
+            ],
+            datafeed: new (window as any).Datafeeds.UDFCompatibleDatafeed(
+              "https://demo_feed.tradingview.com", 
+              {
+                supported_resolutions: ["1", "5", "15", "30", "60", "240", "D", "W", "M"]
+              }
+            ),
+          });
 
-      return () => {
-        if (widgetRef.current) {
-          widgetRef.current.remove();
-          widgetRef.current = null;
+          widget.onChartReady(() => {
+            widgetRef.current = widget;
+            setChartReady(true);
+          });
         }
-        // Check if the script is still in the body before removing
-        if (script.parentNode) {
-            document.body.removeChild(script);
-        }
-      };
-    }, [createWidget]);
+      }
+
+      if (!(window as any).TradingView) {
+        const script = document.createElement('script');
+        script.src = 'https://s3.tradingview.com/tv.js';
+        script.async = true;
+        script.onload = createWidget;
+        document.body.appendChild(script);
+        return () => {
+           if (script.parentNode) {
+              document.body.removeChild(script);
+          }
+          if (widgetRef.current) {
+            widgetRef.current.remove();
+            widgetRef.current = null;
+          }
+        };
+      } else {
+        createWidget();
+      }
+      
+    }, []);
     
     React.useEffect(() => {
-      if (widgetRef.current && widgetRef.current.chart) {
-         widgetRef.current.onChartReady(() => {
-          widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
-        });
+      if (isChartReady && widgetRef.current) {
+         widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
       }
-    }, [selectedPair]);
+    }, [selectedPair, isChartReady]);
 
      React.useEffect(() => {
-      if (widgetRef.current && widgetRef.current.chart) {
-        widgetRef.current.onChartReady(() => {
-          widgetRef.current.chart().setResolution(selectedTimeframe, () => {});
-        });
+      if (isChartReady && widgetRef.current) {
+        widgetRef.current.chart().setResolution(selectedTimeframe, () => {});
       }
-    }, [selectedTimeframe]);
+    }, [selectedTimeframe, isChartReady]);
 
     const handlePairChange = (pair: string) => {
       onPairChange(pair.replace('USDT', '/USDT'));
