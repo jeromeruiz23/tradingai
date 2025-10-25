@@ -46,7 +46,12 @@ export const TradeChart = React.memo(
 
     React.useEffect(() => {
       const createWidget = () => {
-        if (container.current && (window as any).TradingView && !widgetRef.current) {
+        if (
+          container.current &&
+          (window as any).TradingView &&
+          (window as any).Datafeeds &&
+          !widgetRef.current
+        ) {
           const widget = new (window as any).TradingView.widget({
             autosize: true,
             symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
@@ -80,19 +85,26 @@ export const TradeChart = React.memo(
       }
 
       if (!(window as any).TradingView) {
-        const script = document.createElement('script');
-        script.src = 'https://s3.tradingview.com/tv.js';
-        script.async = true;
-        script.onload = createWidget;
-        document.body.appendChild(script);
+        const tvScript = document.createElement('script');
+        tvScript.src = 'https://s3.tradingview.com/tv.js';
+        tvScript.async = true;
+        document.body.appendChild(tvScript);
+
+        tvScript.onload = () => {
+            const datafeedScript = document.createElement('script');
+            datafeedScript.src = 'https://s3.tradingview.com/datafeeds/udf/dist/bundle.js';
+            datafeedScript.async = true;
+            document.body.appendChild(datafeedScript);
+            
+            datafeedScript.onload = createWidget;
+        };
+
         return () => {
-           if (script.parentNode) {
-              document.body.removeChild(script);
-          }
           if (widgetRef.current) {
             widgetRef.current.remove();
             widgetRef.current = null;
           }
+          // Note: Intentionally not removing scripts to avoid re-adding them on fast navigations
         };
       } else {
         createWidget();
