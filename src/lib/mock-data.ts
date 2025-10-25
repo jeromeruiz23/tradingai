@@ -32,15 +32,35 @@ export const initialTrades: Trade[] = [
   },
 ];
 
-export const mockBinanceData = (ticker: string) => JSON.stringify({
+const getBasePrice = (ticker: string) => {
+  switch (ticker) {
+    case 'BTCUSDT':
+      return 68000;
+    case 'ETHUSDT':
+      return 3500;
+    case 'SOLUSDT':
+      return 150;
+    case 'DOGEUSDT':
+      return 0.15;
+    default:
+      return 50000;
+  }
+}
+
+export const mockBinanceData = (ticker: string) => {
+    const basePrice = getBasePrice(ticker);
+    // Simulate a price fluctuation of +/- 1%
+    const price = basePrice * (1 + (Math.random() - 0.5) * 0.02);
+
+    return JSON.stringify({
     "ticker": ticker,
-    "price": "45050.50",
-    "volume": "10000.5",
-    "high_24h": "46000.00",
-    "low_24h": "44000.00",
+    "price": price.toFixed(ticker === 'DOGEUSDT' ? 4 : 2),
+    "volume": (Math.random() * 10000 + 5000).toFixed(1),
+    "high_24h": (basePrice * 1.05).toFixed(2),
+    "low_24h": (basePrice * 0.95).toFixed(2),
     "indicators": {
-        "RSI": "45.5",
-        "MACD": "-25.3",
-        "MovingAverage_50": "45200.00"
+        "RSI": (Math.random() * (70 - 30) + 30).toFixed(1),
+        "MACD": (Math.random() * 100 - 50).toFixed(1),
+        "MovingAverage_50": (basePrice * (1 + (Math.random() - 0.5) * 0.01)).toFixed(2)
     }
-});
+})};
