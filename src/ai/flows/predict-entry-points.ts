@@ -47,7 +47,7 @@ const PredictEntryPointsOutputSchema = z.object({
   tradingPair: z
     .string()
     .optional()
-    .describe('The trading pair for the prediction.'),
+    .describe('The trading pair for this prediction.'),
 });
 
 export type PredictEntryPointsOutput = z.infer<typeof PredictEntryPointsOutputSchema>;

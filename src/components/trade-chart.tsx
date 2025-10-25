@@ -34,7 +34,7 @@ export const TradeChart = React.forwardRef<
   const widgetRef = React.useRef<any>(null);
 
   React.useEffect(() => {
-    if (container.current && (window as any).TradingView) {
+    if (container.current && !widgetRef.current && (window as any).TradingView) {
       const widget = new (window as any).TradingView.widget({
         autosize: true,
         symbol: `BINANCE:${selectedPair.replace("/", "")}`,
@@ -50,11 +50,11 @@ export const TradeChart = React.forwardRef<
       });
       widgetRef.current = widget;
     }
-    
-    return () => {
-        if (container.current) {
-            container.current.innerHTML = "";
-        }
+  }, []); // Run only once on mount
+
+  React.useEffect(() => {
+    if (widgetRef.current && widgetRef.current.chart) {
+      widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}`, () => {});
     }
   }, [selectedPair]);
 
