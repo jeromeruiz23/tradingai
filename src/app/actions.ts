@@ -1,7 +1,7 @@
 "use server";
 
 import { predictEntryPoints } from "@/ai/flows/predict-entry-points";
-import { DUMMY_CHART_IMAGE_DATA_URI, mockBinanceData } from "@/lib/mock-data";
+import { mockBinanceData } from "@/lib/mock-data";
 import { Prediction } from "@/lib/types";
 
 export async function getAIPrediction(
@@ -10,10 +10,15 @@ export async function getAIPrediction(
 ): Promise<{ prediction: Prediction | null; error: string | null }> {
   try {
     const tradingPair = formData.get("tradingPair") as string || "BTCUSDT";
+    const chartImage = formData.get("chartImage") as string;
+    
+    if (!chartImage) {
+      return { prediction: null, error: "Could not capture chart image. Please try again." };
+    }
     
     const prediction = await predictEntryPoints({
       binanceData: mockBinanceData(tradingPair),
-      tradingViewChart: DUMMY_CHART_IMAGE_DATA_URI,
+      tradingViewChart: chartImage,
       accountBalance: 100,
       tradingPair: tradingPair
     });

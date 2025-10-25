@@ -19,14 +19,19 @@ import { Button } from "@/components/ui/button";
 
 const availablePairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"];
 
-export function TradeChart({
-  selectedPair,
-  onPairChange,
-}: {
-  selectedPair: string;
-  onPairChange: (pair: string) => void;
-}) {
+export interface TradeChartHandle {
+  takeScreenshot: () => Promise<string | undefined>;
+}
+
+export const TradeChart = React.forwardRef<
+  TradeChartHandle,
+  {
+    selectedPair: string;
+    onPairChange: (pair: string) => void;
+  }
+>(({ selectedPair, onPairChange }, ref) => {
   const container = React.useRef<HTMLDivElement>(null);
+  const widgetRef = React.useRef<any>(null);
 
   React.useEffect(() => {
     if (container.current && (window as any).TradingView) {
@@ -43,6 +48,7 @@ export function TradeChart({
         allow_symbol_change: true,
         container_id: "tradingview-chart-container",
       });
+      widgetRef.current = widget;
     }
     
     return () => {
@@ -51,6 +57,21 @@ export function TradeChart({
         }
     }
   }, [selectedPair]);
+
+  React.useImperativeHandle(ref, () => ({
+    async takeScreenshot() {
+      if (widgetRef.current) {
+        try {
+          const canvas = await widgetRef.current.takeScreenshot();
+          return canvas.toDataURL("image/png");
+        } catch (error) {
+          console.error("Error taking screenshot:", error);
+          return undefined;
+        }
+      }
+      return undefined;
+    },
+  }));
 
   const handlePairChange = (pair: string) => {
     onPairChange(pair.replace('USDT', '/USDT'));
@@ -103,4 +124,6 @@ export function TradeChart({
       </CardContent>
     </Card>
   );
-}
+});
+
+TradeChart.displayName = "TradeChart";

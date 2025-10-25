@@ -39,10 +39,30 @@ function SubmitButton() {
   );
 }
 
-export function AIPredictionPanel({ onExecuteTrade, selectedPair }: { onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void, selectedPair: string }) {
+export function AIPredictionPanel({ 
+  onExecuteTrade, 
+  selectedPair,
+  onAnalysis,
+  chartImage,
+}: { 
+  onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void, 
+  selectedPair: string,
+  onAnalysis: () => Promise<string | null | undefined>,
+  chartImage: string | null,
+}) {
   const [state, formAction] = useActionState(getAIPrediction, initialState);
   const { toast } = useToast();
   const formRef = React.useRef<HTMLFormElement>(null);
+
+  const handleFormAction = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const imageData = await onAnalysis();
+    if (imageData && formRef.current) {
+      const formData = new FormData(formRef.current);
+      formData.set('chartImage', imageData);
+      formAction(formData);
+    }
+  }
 
   React.useEffect(() => {
     if (state.error) {
@@ -61,8 +81,9 @@ export function AIPredictionPanel({ onExecuteTrade, selectedPair }: { onExecuteT
         <CardDescription>Account Balance: $100.00</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <form action={formAction} ref={formRef} className="space-y-4">
+        <form onSubmit={handleFormAction} ref={formRef} className="space-y-4">
           <input type="hidden" name="tradingPair" value={selectedPair.replace('/', '')} />
+          <input type="hidden" name="chartImage" value={chartImage || ''} />
           <SubmitButton />
         </form>
 
