@@ -23,11 +23,13 @@ const initialState: { prediction: Prediction | null; error: string | null } = {
   error: null,
 };
 
-function SubmitButton() {
+function SubmitButton({ isAnalyzing }: { isAnalyzing: boolean }) {
   const { pending } = useFormStatus();
+  const isDisabled = pending || isAnalyzing;
+  
   return (
-    <Button type="submit" className="w-full" disabled={pending}>
-      {pending ? (
+    <Button type="submit" className="w-full" disabled={isDisabled}>
+      {isDisabled ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           Analyzing...
@@ -43,24 +45,34 @@ export function AIPredictionPanel({
   onExecuteTrade, 
   selectedPair,
   onAnalysis,
-  chartImage,
 }: { 
   onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void, 
   selectedPair: string,
   onAnalysis: () => Promise<string | null | undefined>,
-  chartImage: string | null,
 }) {
   const [state, formAction] = useActionState(getAIPrediction, initialState);
   const { toast } = useToast();
   const formRef = React.useRef<HTMLFormElement>(null);
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
 
   const handleFormAction = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const imageData = await onAnalysis();
-    if (imageData && formRef.current) {
-      const formData = new FormData(formRef.current);
-      formData.set('chartImage', imageData);
-      formAction(formData);
+    setIsAnalyzing(true);
+    try {
+      const imageData = await onAnalysis();
+      if (imageData && formRef.current) {
+        const formData = new FormData(formRef.current);
+        formData.set('chartImage', imageData);
+        formAction(formData);
+      } else if (!imageData) {
+        toast({
+          variant: "destructive",
+          title: "Analysis Failed",
+          description: "Could not capture a screenshot of the chart.",
+        });
+      }
+    } finally {
+      setIsAnalyzing(false);
     }
   }
 
@@ -83,8 +95,8 @@ export function AIPredictionPanel({
       <CardContent className="flex-grow">
         <form onSubmit={handleFormAction} ref={formRef} className="space-y-4">
           <input type="hidden" name="tradingPair" value={selectedPair.replace('/', '')} />
-          <input type="hidden" name="chartImage" value={chartImage || ''} />
-          <SubmitButton />
+          {/* The chartImage is now passed programmatically */}
+          <SubmitButton isAnalyzing={isAnalyzing} />
         </form>
 
         {state.prediction && (

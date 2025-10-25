@@ -11,7 +11,6 @@ import { initialTrades } from "@/lib/mock-data";
 export default function Home() {
   const [trades, setTrades] = React.useState<Trade[]>(initialTrades);
   const [selectedPair, setSelectedPair] = React.useState("BTC/USDT");
-  const [chartImage, setChartImage] = React.useState<string | null>(null);
   const chartRef = React.useRef<TradeChartHandle>(null);
 
   const handleExecuteTrade = (
@@ -58,7 +57,6 @@ export default function Home() {
   const handleAnalysis = async () => {
     const dataUrl = await chartRef.current?.takeScreenshot();
     if (dataUrl) {
-      setChartImage(dataUrl);
       return dataUrl;
     }
     return null;
@@ -78,7 +76,6 @@ export default function Home() {
             onExecuteTrade={handleExecuteTrade} 
             selectedPair={selectedPair}
             onAnalysis={handleAnalysis}
-            chartImage={chartImage}
           />
         </div>
       </main>
