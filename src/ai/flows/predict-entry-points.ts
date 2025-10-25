@@ -5,7 +5,7 @@
  *
  * - predictEntryPoints - A function that predicts entry points and provides trading parameters.
  * - PredictEntryPointsInput - The input type for the predictEntryPoints function.
- * - PredictEntryPointsOutput - The return type for the predictEntryPoints function.
+ * - PredictEntryPointsOutput - The return type for the predictEntrypoints function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -14,10 +14,7 @@ import {z} from 'genkit';
 const PredictEntryPointsInputSchema = z.object({
   binanceData: z
     .string()
-    .describe('Real-time data from Binance Futures.'),
-  tradingViewChart: z
-    .string()
-    .describe('TradingView chart data as a data URI that must include a MIME type and use Base64 encoding. Expected format: \'data:<mimetype>;base64,<encoded_data>\'.'),
+    .describe('Real-time data from Binance Futures, including price, volume, and technical indicators.'),
   accountBalance: z
     .number()
     .describe('The user account balance in USD.'),
@@ -62,12 +59,11 @@ const prompt = ai.definePrompt({
   name: 'predictEntryPointsPrompt',
   input: {schema: PredictEntryPointsInputSchema},
   output: {schema: PredictEntryPointsOutputSchema},
-  prompt: `You are an AI trading assistant that analyzes Binance Futures data and TradingView charts for perpetual contracts to provide optimal trade entry points.
+  prompt: `You are an AI trading assistant that analyzes Binance Futures data for perpetual contracts to provide optimal trade entry points.
 
   Given the following information for {{tradingPair}}, predict the nearest or instant entry point for a trade, explain your reasoning, and suggest a lot size, stop loss, and take profit. The user has an account balance of $100, and you should risk around 20-30% of the account balance.
 
   Binance Data: {{{binanceData}}}
-  TradingView Chart: {{media url=tradingViewChart}}
   Account Balance: $100
   Trading Pair: {{tradingPair}}
 
@@ -75,7 +71,7 @@ const prompt = ai.definePrompt({
 
   Here's how you should structure your response:
   - entryPoint: The predicted entry point for the trade.
-  - reasoning: Explain the rationale behind the predicted entry point. Consider factors like support and resistance levels, chart patterns, and potential breakout points.
+  - reasoning: Explain the rationale behind the predicted entry point. Consider factors like support and resistance levels, chart patterns, and potential breakout points based on the provided data.
   - lotSize: The suggested lot size for the trade, calculated to risk around 20%-30% of the account balance.
   - stopLoss: The suggested stop loss for the trade, placed to limit potential losses.
   - takeProfit: The suggested take profit for the trade, placed to capture potential gains.

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Header } from "@/components/header";
-import { TradeChart, type TradeChartHandle } from "@/components/trade-chart";
+import { TradeChart } from "@/components/trade-chart";
 import { AIPredictionPanel } from "@/components/ai-prediction-panel";
 import { TradeHistory } from "@/components/trade-history";
 import type { Trade, Prediction } from "@/lib/types";
@@ -11,7 +11,6 @@ import { initialTrades } from "@/lib/mock-data";
 export default function Home() {
   const [trades, setTrades] = React.useState<Trade[]>(initialTrades);
   const [selectedPair, setSelectedPair] = React.useState("BTC/USDT");
-  const chartRef = React.useRef<TradeChartHandle>(null);
 
   const handleExecuteTrade = (
     prediction: Prediction,
@@ -54,28 +53,19 @@ export default function Home() {
     );
   };
   
-  const handleAnalysis = async () => {
-    const dataUrl = await chartRef.current?.takeScreenshot();
-    if (dataUrl) {
-      return dataUrl;
-    }
-    return null;
-  };
-
   return (
     <div className="flex min-h-screen w-full flex-col bg-background">
       <Header />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="lg:col-span-2 grid gap-4">
-            <TradeChart ref={chartRef} selectedPair={selectedPair} onPairChange={setSelectedPair} />
+            <TradeChart selectedPair={selectedPair} onPairChange={setSelectedPair} />
             <TradeHistory trades={trades} onCloseTrade={handleCloseTrade} />
           </div>
           <AIPredictionPanel 
             key={selectedPair} 
             onExecuteTrade={handleExecuteTrade} 
             selectedPair={selectedPair}
-            onAnalysis={handleAnalysis}
           />
         </div>
       </main>

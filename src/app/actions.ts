@@ -10,15 +10,9 @@ export async function getAIPrediction(
 ): Promise<{ prediction: Prediction | null; error: string | null }> {
   try {
     const tradingPair = formData.get("tradingPair") as string || "BTCUSDT";
-    const chartImage = formData.get("chartImage") as string;
-    
-    if (!chartImage) {
-      return { prediction: null, error: "Could not capture chart image. Please try again." };
-    }
     
     const prediction = await predictEntryPoints({
       binanceData: mockBinanceData(tradingPair),
-      tradingViewChart: chartImage,
       accountBalance: 100,
       tradingPair: `${tradingPair}PERP`
     });

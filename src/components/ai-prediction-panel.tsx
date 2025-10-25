@@ -15,62 +15,33 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, Info, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 import type { Prediction } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { useActionState } from "react";
+
+const initialState: { prediction: Prediction | null; error: string | null } = {
+  prediction: null,
+  error: null,
+};
 
 export function AIPredictionPanel({ 
   onExecuteTrade, 
   selectedPair,
-  onAnalysis,
 }: { 
   onExecuteTrade: (prediction: Prediction, type: "Buy" | "Sell") => void, 
   selectedPair: string,
-  onAnalysis: () => Promise<string | null | undefined>,
 }) {
-  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
-  const [state, setState] = React.useState<{ prediction: Prediction | null; error: string | null }>({ prediction: null, error: null });
+  const [state, formAction, isAnalyzing] = useActionState(getAIPrediction, initialState);
   const { toast } = useToast();
+  const formRef = React.useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsAnalyzing(true);
-    setState({ prediction: null, error: null }); // Clear previous state
-
-    try {
-      const imageData = await onAnalysis();
-      if (!imageData) {
-        toast({
-          variant: "destructive",
-          title: "Analysis Failed",
-          description: "Could not capture a screenshot of the chart.",
-        });
-        return;
-      }
-      
-      const formData = new FormData();
-      formData.append('tradingPair', selectedPair.replace('/', ''));
-      formData.append('chartImage', imageData);
-
-      const result = await getAIPrediction({ prediction: null, error: null }, formData);
-      setState(result);
-
-      if (result.error) {
-        toast({
-          variant: "destructive",
-          title: "Analysis Failed",
-          description: result.error,
-        });
-      }
-
-    } catch (e) {
-       toast({
-          variant: "destructive",
-          title: "Analysis Failed",
-          description: "An unexpected error occurred.",
-        });
+  React.useEffect(() => {
+    if (state.error) {
+      toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: state.error,
+      });
     }
-    finally {
-      setIsAnalyzing(false);
-    }
-  }
+  }, [state.error, toast]);
   
   return (
     <Card className="flex flex-col">
@@ -79,7 +50,8 @@ export function AIPredictionPanel({
         <CardDescription>Account Balance: $100.00</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form ref={formRef} action={formAction} className="space-y-4">
+           <input type="hidden" name="tradingPair" value={selectedPair.replace('/', '')} />
           <Button type="submit" className="w-full" disabled={isAnalyzing}>
             {isAnalyzing ? (
               <>
