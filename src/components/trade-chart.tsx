@@ -16,8 +16,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const availablePairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT"];
+const timeframes = [
+  { value: "15", label: "15m" },
+  { value: "60", label: "1H" },
+  { value: "240", label: "4H" },
+  { value: "D", label: "1D" },
+];
 
 export const TradeChart = React.memo(
   ({
@@ -29,14 +36,14 @@ export const TradeChart = React.memo(
   }) => {
     const container = React.useRef<HTMLDivElement>(null);
     const widgetRef = React.useRef<any>(null);
-    const isMounted = React.useRef(false);
+    const [selectedTimeframe, setSelectedTimeframe] = React.useState("15");
 
     const createWidget = React.useCallback(() => {
       if (container.current && (window as any).TradingView && !widgetRef.current) {
         const widget = new (window as any).TradingView.widget({
           autosize: true,
           symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
-          interval: "15",
+          interval: selectedTimeframe,
           timezone: "Etc/UTC",
           theme: "dark",
           style: "1",
@@ -48,33 +55,41 @@ export const TradeChart = React.memo(
         });
         widgetRef.current = widget;
       }
-    }, [selectedPair]);
+    }, [selectedPair, selectedTimeframe]);
 
     React.useEffect(() => {
-      if (!isMounted.current) {
-        isMounted.current = true;
-        if ((window as any).TradingView) {
-          createWidget();
-        } else {
-          const script = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
-          script?.addEventListener('load', createWidget, { once: true });
-        }
-      }
+      const script = document.createElement('script');
+      script.src = 'https://s3.tradingview.com/tv.js';
+      script.async = true;
+      script.onload = () => {
+        createWidget();
+      };
+      document.body.appendChild(script);
+
       return () => {
         if (widgetRef.current) {
           widgetRef.current.remove();
           widgetRef.current = null;
         }
+        document.body.removeChild(script);
       };
     }, [createWidget]);
     
     React.useEffect(() => {
-      if (widgetRef.current && widgetRef.current.chart && typeof widgetRef.current.chart === 'function') {
+      if (widgetRef.current && widgetRef.current.chart) {
          widgetRef.current.onChartReady(() => {
           widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
         });
       }
     }, [selectedPair]);
+
+     React.useEffect(() => {
+      if (widgetRef.current && widgetRef.current.chart) {
+        widgetRef.current.onChartReady(() => {
+          widgetRef.current.chart().setResolution(selectedTimeframe, () => {});
+        });
+      }
+    }, [selectedTimeframe]);
 
     const handlePairChange = (pair: string) => {
       onPairChange(pair.replace('USDT', '/USDT'));
@@ -91,7 +106,7 @@ export const TradeChart = React.memo(
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={selectedPair.replace('/', '')} onValuechange={handlePairChange}>
+              <Select value={selectedPair.replace('/', '')} onValueChange={handlePairChange}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue placeholder="Select Pair" />
                 </SelectTrigger>
@@ -103,18 +118,17 @@ export const TradeChart = React.memo(
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm">
-                15m
-              </Button>
-              <Button variant="secondary" size="sm">
-                1H
-              </Button>
-              <Button variant="outline" size="sm">
-                4H
-              </Button>
-              <Button variant="outline" size="sm">
-                1D
-              </Button>
+               {timeframes.map((tf) => (
+                <Button
+                  key={tf.value}
+                  variant={selectedTimeframe === tf.value ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedTimeframe(tf.value)}
+                  className={cn(selectedTimeframe === tf.value && "text-foreground")}
+                >
+                  {tf.label}
+                </Button>
+              ))}
             </div>
           </div>
         </CardHeader>
