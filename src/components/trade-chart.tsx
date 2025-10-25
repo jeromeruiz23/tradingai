@@ -32,9 +32,10 @@ export const TradeChart = React.forwardRef<
 >(({ selectedPair, onPairChange }, ref) => {
   const container = React.useRef<HTMLDivElement>(null);
   const widgetRef = React.useRef<any>(null);
+  const isMounted = React.useRef(false);
 
-  React.useEffect(() => {
-    if (container.current && !widgetRef.current && (window as any).TradingView) {
+  const createWidget = React.useCallback(() => {
+    if (container.current && (window as any).TradingView) {
       const widget = new (window as any).TradingView.widget({
         autosize: true,
         symbol: `BINANCE:${selectedPair.replace("/", "")}PERP`,
@@ -50,17 +51,39 @@ export const TradeChart = React.forwardRef<
       });
       widgetRef.current = widget;
     }
-  }, []); // Run only once on mount
+  }, [selectedPair]);
 
   React.useEffect(() => {
-    if (widgetRef.current && widgetRef.current.chart) {
-      widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
+    if (!isMounted.current) {
+      isMounted.current = true;
+      if ((window as any).TradingView) {
+        createWidget();
+      } else {
+        const script = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
+        script?.addEventListener('load', createWidget);
+      }
+    }
+     return () => {
+      const script = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
+      script?.removeEventListener('load', createWidget);
+      if (widgetRef.current) {
+        widgetRef.current.remove();
+        widgetRef.current = null;
+      }
+    };
+  }, [createWidget]);
+
+  React.useEffect(() => {
+    if (widgetRef.current && widgetRef.current.chart && typeof widgetRef.current.chart === 'function') {
+       widgetRef.current.onChartReady(() => {
+        widgetRef.current.chart().setSymbol(`BINANCE:${selectedPair.replace('/', '')}PERP`, () => {});
+      });
     }
   }, [selectedPair]);
 
   React.useImperativeHandle(ref, () => ({
     async takeScreenshot() {
-      if (widgetRef.current) {
+      if (widgetRef.current && typeof widgetRef.current.takeScreenshot === 'function') {
         try {
           const canvas = await widgetRef.current.takeScreenshot();
           return canvas.toDataURL("image/png");

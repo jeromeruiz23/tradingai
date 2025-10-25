@@ -19,7 +19,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <Script src="https://s3.tradingview.com/tv.js" strategy="afterInteractive" />
+        <Script src="https://s3.tradingview.com/tv.js" strategy="beforeInteractive" />
       </head>
       <body className="font-body antialiased h-full">
         {children}
